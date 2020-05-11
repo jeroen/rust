@@ -125,7 +125,7 @@ mod dl {
     use std::ptr;
 
     use winapi::shared::minwindef::HMODULE;
-    use winapi::um::errhandlingapi::SetThreadErrorMode;
+    use winapi::um::errhandlingapi::SetErrorMode;
     use winapi::um::libloaderapi::{FreeLibrary, GetModuleHandleExW, GetProcAddress, LoadLibraryW};
     use winapi::um::winbase::SEM_FAILCRITICALERRORS;
 
@@ -133,11 +133,7 @@ mod dl {
         // disable "dll load failed" error dialog.
         let prev_error_mode = unsafe {
             let new_error_mode = SEM_FAILCRITICALERRORS;
-            let mut prev_error_mode = 0;
-            let result = SetThreadErrorMode(new_error_mode, &mut prev_error_mode);
-            if result == 0 {
-                return Err(io::Error::last_os_error().to_string());
-            }
+            let prev_error_mode = SetErrorMode(new_error_mode);
             prev_error_mode
         };
 
@@ -159,7 +155,7 @@ mod dl {
         };
 
         unsafe {
-            SetThreadErrorMode(prev_error_mode, ptr::null_mut());
+            SetErrorMode(prev_error_mode);
         }
 
         result
